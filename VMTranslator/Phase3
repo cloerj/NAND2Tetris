@@ -1,0 +1,122 @@
+#John-Marc Cloer
+import os
+
+#A couple temp variables to increment later
+TEMP1=0
+TEMP2=0
+
+#Here is the actual function to start translating values
+class CodeWriter(object):
+    def __init__(myFile):
+        pass
+    #This guy should be writing out to a new file    
+    def nefileOut(myFile,fileIn):
+        myFile.fileIn = fileIn
+        myFile.filesplitext = os.path.splitext(fileIn)
+        fileOut = open(myFile.filesplitext[0] + '.asm', 'w')
+        return fileOut
+		
+	#push and pop inputs
+	def pushD():
+		fileOut.write('@SP\nA=M\M=D\n')
+	def popD():
+		fileOut.write('@SP\nAM=M-1\nD=M\n')
+	#Used to increment the temps
+	def incTemp():
+		TEMP1 = TEMP1 + 1
+    TEMP2 = TEMP2 + 1
+    
+	#standard arithmetic and boolean inputs (add, sub, neg, eq, gt, lt, and, or, not)
+	def convertToArithAndBool(myFile, fileOut, input):
+        global TEMP1, TEMP2
+        if input == 'add':
+            fileOut.write(popD+'A=A-1\nM=M+D\n')
+        elif input == 'sub':
+            fileOut.write(popD+'A=A-1\nM=M-D\n')
+        elif input == 'neg':
+            fileOut.write('@SP\nM=AM-1\nM=-M\n@SP\nM=M+1\n')
+		elif input == 'eq':
+		        #the TRUE section will only be printed if it's true, the reverse is true for FALSE
+            fileOut.write(popD+'@SP\nA=M-1\nA=A-1\nD=M\nA=A+1\nD=D-M\n\
+						@TRUE'+str(TEMP1)+'\nD;JEQ\n@FALSE'+str(TEMP2)+'\nD=0;JMP\n\
+                        (TRUE'+str(TEMP1)+')\nD=-1\n\
+                        (FALSE'+str(TEMP2)+')\n'+pushD+'\nM=D\n')
+            incTemp():
+        elif input == 'gt':
+            fileOut.write(popD+'@SP\nA=M-1\nA=A-1\nD=M\nA=A+1\nD=D-M\n\
+						@TRUE'+str(TEMP1)+'\nD;JGT\n@FALSE'+str(TEMP2)+'\nD=0;JMP\n\
+                        (TRUE'+str(TEMP1)+')\nD=-1\n\
+                        (FALSE'+str(TEMP2)+')\n'+pushD+'\nM=D\n')
+			incTemp():
+        elif input == 'lt':
+            fileOut.write(popD+'@SP\nA=M-1\nA=A-1\nD=M\nA=A+1\nD=D-M\n\
+						@TRUE'+str(TEMP1)+'\nD;JLT\n@FALSE'+str(TEMP2)+'\nD=0;JMP\n\
+                        (TRUE'+str(TEMP1)+')\nD=-1\n\
+                        (FALSE'+str(TEMP2)+')\n'+pushD+'\nM=D\n')
+            incTemp():	
+        elif input == 'and':
+            fileOut.write(popD+'@SP\nAM=M-1\nM=M&D\n@SP\nM=M+1\n')
+        elif input == 'or':
+            fileOut.write(popD+'@SP\nAM=M-1\nM=D|M\n@SP\nM=M+1\n')
+        elif input == 'not':  
+            fileOut.write('@SP\nAM=M-1\nM=!M\n@SP\nM=M+1\n')
+            
+  #Here are the pop functions  
+	def writePop(myFile, fileOut, input, part, index, fileIn):
+		if input == 'C_POP':
+            if part == 'local':
+                fileOut.write('@LCL\nD=M\n'+str(index)+'\nD=D+A\n@R15\nM=D\n'+popD+'\n@R15\nA=M\nM=D\n')
+         	elif part == 'argument':
+                fileOut.write(popD+'@ARG\nA=M\n')
+                for i in range (0,int(index)):  
+                    fileOut.write('A=A+1\n')
+                fileOut.write('M=D\n')
+            elif part == 'this':
+                fileOut.write(popD+'@THIS\nA=M\n')
+                for i in range (0,int(index)):
+                    fileOut.write('A=A+1\n')
+                fileOut.write('M=D\n')
+            elif part == 'that':
+                fileOut.write(popD+'@THAT\nA=M\n')
+                for i in range (0,int(index)):  
+                    fileOut.write('A=A+1\n')
+                fileOut.write('M=D\n')
+            elif part == 'pointer':
+                fileOut.write(popD)
+                if index == '0':
+                    fileOut.write('@3\n')
+                elif index == '1':
+                    fileOut.write('@4\n')
+                fileOut.write('M=D\n')
+            elif part == 'temp':
+                fileOut.write(popD+'@'+str(5+int(index))+'\nM=D\n')
+            elif part == 'static':
+                staticname = fileIn.strip('.vm')+'.'+str(index)
+                fileOut.write(popD+'@'+staticname+'\nM=D\n')		
+    #Here are the push functions
+    def writePush(myFile, fileOut, input, part, index, fileIn):
+        if input == 'C_PUSH':
+            if part == 'constant':
+                fileOut.write('@'+str(index)+'\nD=A\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'static':
+                staticname = fileIn.strip('.vm') + '.' + str(index)
+                fileOut.write('@'+str(staticname)+'\nD=M\n'+pushD+'@SP\nM=M+1\n')
+			elif part == 'local':
+                fileOut.write('@LCL\nD=M\n@'+str(index)+'\nA=A+D\nD=M\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'argument':
+                fileOut.write('@ARG\nD=M\n@'+str(index)+'\nA=A+D\nD=M\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'this':
+                fileOut.write('@THIS\nD=M\n@'+str(index)+'\nA=A+D\nD=M\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'that':
+                fileOut.write('@THAT\nD=M\n@'+str(index)+'\nA=A+D\nD=M\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'pointer':
+                if index == '0':
+                    fileOut.write('@3\n')
+                elif index == '1':
+                    fileOut.write('@4\n')
+                fileOut.write('D=M\n'+pushD+'@SP\nM=M+1\n')
+            elif part == 'temp':
+                fileOut.write('@'+str(int(index) + 5)+'\nD=M\n'+pushD+'@SP\nM=M+1\n')
+    @staticmethod
+    def close(fileOut):
+        fileOut.close()
