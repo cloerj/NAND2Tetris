@@ -24,11 +24,12 @@ class CodeWriter(object):
 	#Used to increment the temps
 	def incTemp():
 		TEMP1 = TEMP1 + 1
-    TEMP2 = TEMP2 + 1
+    		TEMP2 = TEMP2 + 1
     
 	#standard arithmetic and boolean inputs (add, sub, neg, eq, gt, lt, and, or, not)
 	def convertToArithAndBool(myFile, fileOut, input):
         global TEMP1, TEMP2
+        ###How it works is when it finds one of the following inputs (add, sub, ect.) it simply writes out the Assembly code!### 
         if input == 'add':
             fileOut.write(popD+'A=A-1\nM=M+D\n')
         elif input == 'sub':
