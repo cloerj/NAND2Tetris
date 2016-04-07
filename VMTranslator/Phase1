@@ -1,0 +1,62 @@
+## Classes #########################################################################
+import sys, getopt, os
+
+
+
+class finalJVMList:
+     def __init__(self, codeList):  #constructor, initialize Reader obj with a file name.
+        self.jvmCode = codeList
+
+
+## instructions ######################################################################
+
+print 'arguments:', len(sys.argv) # prints command line arguments length
+
+if len(sys.argv) == 1:
+    print 'please enter a file path for your JVM code'
+
+else:
+    try:
+        opts, filePathList = getopt.getopt(sys.argv,"hi:o:",["ifile=","ofile="]) #filePath will contain the cmd line arg
+    except getopt.GetoptError:
+      print 'test.py -i <inputfile> -o <outputfile>'
+      sys.exit(2)
+
+print filePathList[1]                                                            #arg either a dir or a .jvm file.
+
+
+#if file name ends with .jvm, we begin parsing single file
+#else we have a directory and we need to get a list of these files.
+
+stringPeek = filePathList[1]
+stringPeek2 = stringPeek.split(".")
+print stringPeek, ' is the file path'
+print 'file path ends with: ', stringPeek2
+
+files = []                                # this list will contain all files, even if it's one file
+
+if 'vm' in stringPeek2:
+    # then we have a single file
+    print 'single file found'
+    singleJVMpath = stringPeek      # open single jvm file, add to files list.
+    files.add(singleJVMpath)
+
+#else open the directory and read all files in there into files[]
+else:
+    multiJVMdir = stringPeek
+    for filename in os.listdir(multiJVMdir):     # do something with each filename
+        fullPath = stringPeek + '\\' + (filename)# fullPath will be: directory instring peek + "\filename.jvm"
+        print filename                           # print statement for debugging)
+        files.append(fullPath)                   # add each file object to files list
+
+
+
+## Run through the list of files and parse all their text
+
+for fileName in files:      #for every file
+    f = open(fileName)      #open every file
+    line = f.readlines()    #read all lines of file into lines list
+    print "Read Line: %s" % (line) # debugging print
+
+# could call an object from here that hold all the lines
+rawJVM = finalJVMList(line) #rawJVM contains all the lines of raw jvm code from all files
